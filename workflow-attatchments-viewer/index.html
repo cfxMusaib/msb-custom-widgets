@@ -35,6 +35,10 @@
         * {
             font-size: 12px;
         }
+
+        .v-application__wrap {
+            max-height: 100dvh;;
+        }
     </style>
 </head>
 
@@ -45,27 +49,19 @@
                 <v-card style="min-width: 250px;max-width: 250px; width: 250px;">
                     <v-list class="py-0" color="primary">
                         <v-list-item v-for="(item, i) in tasks" :key="i" @click="selected = item"
-                            :active="selected === item" style="cursor: pointer" :title="item.name">
+                            :active="selected === item" style="cursor: pointer" :title="item.attachment_name">
                         </v-list-item>
                     </v-list>
                 </v-card>
-                <div v-if="selected" class="d-flex flex-column flex-grow-1 ml-2">
-                    <v-card class="mb-2" style="border-radius: 4px; overflow: hidden;" color="primary"
+                <div v-if="selected" class="h-100 w-100 ml-2">
+                    <v-card class="mb-2 h-100" style="border-radius: 4px; overflow: hidden;" color="primary"
                         density="compact">
                         <v-card-title class="px-4 py-2">
                             Logs
                         </v-card-title>
-                        <div style="height: 250px">
+                        <div class="h-100">
                             <div id="monaco-container" style="width: 100%; height: 100%;"></div>
                         </div>
-                    </v-card>
-                    <v-card class="flex-grow-1" style="border-radius: 4px; overflow: hidden;" color="primary"
-                        density="compact">
-                        <v-card-title class="px-4 py-2">
-                            Details
-                        </v-card-title>
-                        <v-data-table :items="selected.data" hide-default-footer density="compact"
-                            class="h-100"></v-data-table>
                     </v-card>
                 </div>
             </v-container>
@@ -75,8 +71,15 @@
     <script>
         const { createApp, ref, onMounted, watch } = Vue;
         const { createVuetify, useTheme } = Vuetify;
-        const endpoint = "data.json?jobId={{jobId}}&workflow_name={{workflow_name}}"
-        console.log("MSB ENDPOINT ", endpoint)
+        const endpoint = "wf-attachments.json";
+        console.log("MSB ENDPOINT ", endpoint);
+
+        // {%- set query = "jobId = '"+jobId+"' and messageType is 'attachment'" -%}
+        // {%- set pstream = "rda_workflow_logs" -%}
+
+        // {%-
+        //     set attachments = engine.query_stream_data(pstream, cfxql_query=query)
+        // -%}
 
         const app = createApp({
             setup() {
@@ -86,48 +89,69 @@
                 let monacoInstance = null;
                 const theme = useTheme();
 
+                const formatJSON = (str) => {
+                    return JSON.stringify(JSON.parse(str), null, 2)
+                }
+
                 onMounted(async () => {
                     try {
                         const res = await fetch(endpoint);
                         const data = await res.json();
                         console.log("MSB CHECK DATA ", data)
-                        if (true) {
-                            const colorScheme = window?.parent
-                                .getComputedStyle(window.parent.document.documentElement)
-                                .getPropertyValue('color-scheme');
-                            if (colorScheme === "dark") {
-                                theme.name.value = "dark"
-                            } else {
-                                // temp for testing
-                                // theme.name.value = "dark"
-                            }
+
+                        const colorScheme = window?.parent
+                            .getComputedStyle(window.parent.document.documentElement)
+                            .getPropertyValue('color-scheme');
+                        if (colorScheme === "dark") {
+                            theme.name.value = "dark"
+                        } else {
+                            // temp for testing
+                            // theme.name.value = "dark"
                         }
+                        // tasks.value = {{attachments | tojson}};
                         tasks.value = data;
+
                         selected.value = tasks.value[0]; // auto-select first item
                     } catch (error) {
-                        cnsole.log("Error getting task data", error)
+                        console.log("Error getting task data", error)
                     }
 
-                    initMonaco(selected.value?.logs || '');
+                    if(selected?.value.attachment_data && selected.value?.attachment_format === 'json'){
+                        initMonaco(formatJSON(selected.value?.attachment_data), 'json');
+                    }else{
+                        initMonaco(selected.value?.attachment_data || '', selected.value?.attachment_format || 'plaintext');
+                    }
                 });
 
                 // Watch selected change
                 watch(selected, (newVal) => {
                     if (monacoInstance && newVal) {
-                        monacoInstance.setValue(newVal.logs || '');
+                        if(newVal.attachment_data && newVal.attachment_format==='json'){
+                            monacoInstance.setValue(formatJSON(newVal.attachment_data));
+                        }else{
+                            monacoInstance.setValue(newVal.attachment_data || '');
+                        }
+                        if(newVal.attachment_format){
+                            monaco.editor.setModelLanguage(monacoInstance.getModel(), newVal.attachment_format)
+                        }else{
+                            monaco.editor.setModelLanguage(monacoInstance.getModel(), 'plaintext')
+                        }
                     }
                 });
 
                 // Initialize Monaco Editor
-                function initMonaco(logText) {
+                function initMonaco(logText, language) {
                     require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs' } });
                     require(['vs/editor/editor.main'], () => {
                         monacoInstance = monaco.editor.create(document.getElementById('monaco-container'), {
                             value: logText,
-                            language: 'plaintext',
+                            language: language,
                             readOnly: true,
                             automaticLayout: true,
                             theme: 'vs-dark',
+                            autoIndent: true,
+                            formatOnPaste: true,
+                            formatOnType: true,
                             fontSize: 13,
                             minimap: { enabled: false }
                         });

@@ -1,0 +1,38 @@
+[
+    {
+        "_RDA_Id": "174926180466100302492b461a",
+        "_id": "5yAgSJcB9VLxwaVu5EV3",
+        "_index": "2b3ada5bd1f440f4af9e5bd9c66223e4-stream-7b8ed283-rda_workflow_logs",
+        "_score": null,
+        "attachment_data": "{\"name\": \"compliance_output\", \"value_type\": \"array\", \"runtime_input\": true, \"IP_Address\": \"10.95.140.23\", \"compliance_output\": {\"compliance_output\": [\"```html\\n<html>\\n  <div>\\n    <p>Config compliance check for device <strong>10.95.140.23</strong> has been performed. Below is the summary of the compliance checks:</p>\\n    <v-table density=\\\"compact\\\">\\n      <thead>\\n        <tr>\\n          <th class=\\\"text-left\\\">Compliance Rule</th>\\n          <th class=\\\"text-left\\\">Check Description</th>\\n          <th class=\\\"text-left\\\">Status</th>\\n        </tr>\\n      </thead>\\n      <tbody>\\n        <tr>\\n          <td>IPv6 is disabled if not used</td>\\n          <td>Ensure no 'ipv6' configurations unless in use.</td>\\n          <td>Passed</td>\\n        </tr>\\n        <tr>\\n          <td>Password aging configured</td>\\n          <td>Look for 'password aging' or radius/tacacs server configuration with policies.</td>\\n          <td>Passed</td>\\n        </tr>\\n        <tr>\\n          <td>Access control lists (ACLs) on vty lines</td>\\n          <td>VTY lines reference 'access-class'.</td>\\n          <td>Failed</td>\\n        </tr>\\n        <tr>\\n          <td>IP routing is enabled</td>\\n          <td>Presence of 'ip routing'.</td>\\n          <td>Failed</td>\\n        </tr>\\n        <tr>\\n          <td>Loopback interface configured</td>\\n          <td>Presence of 'Loopback0' interface.</td>\\n          <td>Failed</td>\\n        </tr>\\n        <tr>\\n          <td>Interfaces have descriptions</td>\\n          <td>Each active interface should include a 'description'.</td>\\n          <td>Passed</td>\\n        </tr>\\n        <tr>\\n          <td>Control plane protection is configured</td>\\n          <td>Presence of 'control-plane' or 'cppr' configuration.</td>\\n          <td>Passed</td>\\n        </tr>\\n        <tr>\\n          <td>Secure SNMP configuration</td>\\n          <td>No use of 'snmp-server community public' or 'private'.</td>\\n          <td>Passed</td>\\n        </tr>\\n        <tr>\\n          <td>Service password-encryption is enabled</td>\\n          <td>Presence of 'service password-encryption'.</td>\\n          <td>Failed</td>\\n        </tr>\\n        <tr>\\n          <td>Clock timezone is set</td>\\n          <td>Presence of 'clock timezone' setting.</td>\\n          <td>Failed</td>\\n        </tr>\\n        <tr>\\n          <td>NTP is configured</td>\\n          <td>Presence of 'ntp server' or 'ntp peer' lines.</td>\\n          <td>Failed</td>\\n        </tr>\\n        <tr>\\n          <td>Logging is enabled</td>\\n          <td>Look for 'logging host' or 'logging trap' settings.</td>\\n          <td>Passed</td>\\n        </tr>\\n        <tr>\\n          <td>Banner message is configured</td>\\n          <td>Presence of 'banner motd' or 'banner login' with meaningful text.</td>\\n          <td>Failed</td>\\n        </tr>\\n        <tr>\\n          <td>SSH is used instead of Telnet</td>\\n          <td>Ensure 'transport input ssh' is set on vty lines and 'telnet' is not listed.</td>\\n          <td>Passed</td>\\n        </tr>\\n        <tr>\\n          <td>AAA authentication is enabled</td>\\n          <td>Presence of 'aaa new-model' and 'aaa authentication login' configuration.</td>\\n          <td>Failed</td>\\n        </tr>\\n        <tr>\\n          <td>Use enable secret instead of enable password</td>\\n          <td>Ensure 'enable secret' is configured and 'enable password' is not.</td>\\n          <td>Failed</td>\\n        </tr>\\n        <tr>\\n          <td>No default or weak enable passwords</td>\\n          <td>Look for 'enable password' or 'enable secret' and validate against known weak values.</td>\\n          <td>Passed</td>\\n        </tr>\\n      </tbody>\\n    </v-table>\\n    <p>Summary:</p>\\n    <ul>\\n      <li>Checks Passed: 9</li>\\n      <li>Checks Failed: 8</li>\\n    </ul>\\n    <p>Tools called:</p>\\n    <ul>\\n      <li>common-list_prompt_templates_by_persona</li>\\n      <li>network_automation-run_ssh_command</li>\\n      <li>network_automation-get_config_compliance_policies</li>\\n      <li>context_cache-search</li>\\n    </ul>\\n  </div>\\n</html>\\n```\"], \"workflow_name\": \"check_config_compliance\", \"jobId\": \"dc331c10503f450c8203fde402fd5b95\"}}",
+        "attachment_format": "json",
+        "attachment_name": "workflow-final-context",
+        "count_": 1,
+        "jobDir": "/tmp/tmp78slgnlm",
+        "jobId": "dc331c10503f450c8203fde402fd5b95",
+        "messageType": "attachment",
+        "sort": [
+            "174926180466100302492b461a"
+        ],
+        "timestamp": "2025-06-07T02:03:24.557051+00:00",
+        "workflow_name": "check_config_compliance"
+    },
+    {
+        "_RDA_Id": "174926176558500296492b461a",
+        "_id": "ZCAgSJcB9VLxwaVuS0TS",
+        "_index": "2b3ada5bd1f440f4af9e5bd9c66223e4-stream-7b8ed283-rda_workflow_logs",
+        "_score": null,
+        "attachment_data": "{\"name\": \"compliance_output\", \"value_type\": \"array\", \"runtime_input\": true, \"IP_Address\": \"10.95.140.23\"}",
+        "attachment_format": "json",
+        "attachment_name": "workflow-input-context",
+        "count_": 1,
+        "jobDir": "/tmp/tmp78slgnlm",
+        "jobId": "dc331c10503f450c8203fde402fd5b95",
+        "messageType": "attachment",
+        "sort": [
+            "174926176558500296492b461a"
+        ],
+        "timestamp": "2025-06-07T02:02:45.542409+00:00",
+        "workflow_name": "check_config_compliance"
+    }
+]
