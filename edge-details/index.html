@@ -370,8 +370,11 @@
             try { return JSON.parse(el.textContent || "null"); } catch { return null; }
         })();
         let left_id, right_id;
-        let iconMap = {};
+        
+        // Get icon map from parent window
+        const iconMap = window.parent?.cfxIconMap || {};
         console.log("MSB context", context)
+        console.log("MSB iconMap from parent", iconMap)
 
         const setContextToApiEndpoint = (api_endpoint) => {
             if(!context){
@@ -435,16 +438,6 @@
             }
         }
 
-        async function fetchIconMap () {
-            try {
-                const response = await fetch("/assets/cfx-iconmap.json");
-                const iconMap = await response.json();
-                return iconMap;
-            } catch (error) {
-                console.error("Fetch error:", error);
-                return {};
-            }
-        }
         // Create nodes
         function createNodes(components) {
             const container = document.getElementById('graph-container');
@@ -572,7 +565,6 @@
                 return;
             }
             try {
-                iconMap = await fetchIconMap();
                 const data = await fetchData();
                 const relationships = data?.relationships;
                 const components = data?.components;
