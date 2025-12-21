@@ -19,8 +19,8 @@
             "nodeLabel": "node_label",
             "nodeIcon": "node_type",
             "edgeCenterLabel": "link_type",
-            "edgeLeftLabel": "displayAttributes[0].value",
-            "edgeRightLabel": "displayAttributes[1].value"
+            "edgeSourceLabel": "displayAttributes[0].value",
+            "edgeDestLabel": "displayAttributes[1].value"
         }
         
         // =============================================================================
@@ -499,6 +499,34 @@
             container.appendChild(rightNodeDiv);
         }
 
+        /**
+         * Get attribute value from relationship object
+         * First tries _.get() with the key, then searches displayAttributes array
+         * Always returns a string (empty string if not found)
+         * @param {Object} relationship - The relationship object
+         * @param {string} attribute_map_key - The key to search for
+         * @returns {string} The value as a string, or empty string if not found
+         */
+        function getAttributeMapValue(relationship, attribute_map_key) {
+            // First try _.get() with the key
+            let value = _.get(relationship, attribute_map_key);
+            
+            // If we got a value (not undefined, null, or empty string), return it as string
+            if (value !== undefined && value !== null && value !== '') {
+                return String(value);
+            }
+            
+            // If not found, search in displayAttributes array
+            if (relationship.displayAttributes && Array.isArray(relationship.displayAttributes)) {
+                const displayAttr = relationship.displayAttributes.find(attr => attr.name === attribute_map_key);
+                if (displayAttr && displayAttr.value !== undefined && displayAttr.value !== null && displayAttr.value !== '') {
+                    return String(displayAttr.value);
+                }
+            }
+            
+            return '';
+        }
+
         // Create edges
         function createEdges(relationships) {
             const edgesContainer = document.getElementById('edges');
@@ -528,26 +556,32 @@
                 // Create edge label
                 const edgeLabel = document.createElement('div');
                 edgeLabel.className = 'edge-label';
-                edgeLabel.textContent = _.get(relationship, attributeMap.edgeCenterLabel) || '';
+                edgeLabel.textContent = getAttributeMapValue(relationship, attributeMap.edgeCenterLabel);
 
-                // Create source interface label
-                let edgeLeftLabel;
-                const leftLabelValue = _.get(relationship, attributeMap.edgeLeftLabel);
-                if(leftLabelValue){
-                    edgeLeftLabel = document.createElement('p');
-                    edgeLeftLabel.title = leftLabelValue;
-                    edgeLeftLabel.className = 'interface-label left';
-                    edgeLeftLabel.textContent = leftLabelValue;
+                // Get source and destination interface values
+                const sourceInterfaceValue = getAttributeMapValue(relationship, attributeMap.edgeSourceLabel);
+                const destInterfaceValue = getAttributeMapValue(relationship, attributeMap.edgeDestLabel);
+
+                // Create source interface label - position based on direction
+                // If arrow goes right (LHS -> RHS), source is on left
+                // If arrow goes left (RHS -> LHS), source is on right
+                let sourceInterfaceLabel;
+                if(sourceInterfaceValue){
+                    sourceInterfaceLabel = document.createElement('p');
+                    sourceInterfaceLabel.title = sourceInterfaceValue;
+                    sourceInterfaceLabel.className = `interface-label ${isRightToLeft ? 'right' : 'left'}`;
+                    sourceInterfaceLabel.textContent = sourceInterfaceValue;
                 }
 
-                // Create destination interface label
+                // Create destination interface label - position based on direction
+                // If arrow goes right (LHS -> RHS), destination is on right
+                // If arrow goes left (RHS -> LHS), destination is on left
                 let destInterfaceLabel;
-                const edgeRightLabel = _.get(relationship, attributeMap.edgeRightLabel);
-                if(edgeRightLabel){
+                if(destInterfaceValue){
                     destInterfaceLabel = document.createElement('p');
-                    destInterfaceLabel.title = edgeRightLabel;
-                    destInterfaceLabel.className = 'interface-label right';
-                    destInterfaceLabel.textContent = edgeRightLabel;
+                    destInterfaceLabel.title = destInterfaceValue;
+                    destInterfaceLabel.className = `interface-label ${isRightToLeft ? 'left' : 'right'}`;
+                    destInterfaceLabel.textContent = destInterfaceValue;
                 }
                 // Assemble edge
                 if(!relationship.is_directionless){
@@ -555,8 +589,8 @@
                 }
                 edgeDiv.appendChild(edgeLine);
                 edgeDiv.appendChild(edgeLabel);
-                if(edgeLeftLabel){
-                    edgeDiv.appendChild(edgeLeftLabel);
+                if(sourceInterfaceLabel){
+                    edgeDiv.appendChild(sourceInterfaceLabel);
                 }
                 if(destInterfaceLabel){
                     edgeDiv.appendChild(destInterfaceLabel);
