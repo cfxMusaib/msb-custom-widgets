@@ -636,7 +636,11 @@
                     return matchesParentDirection || matchesOppositeDirection;
                 })
 
-                const { lhsNode, rhsNode } = createNodes(components);
+                const nodesResult = createNodes(components);
+                if (!nodesResult) {
+                    throw new Error("LHS or RHS node not found in components");
+                }
+                const { lhsNode, rhsNode } = nodesResult;
                 createEdges(filteredRelationships);
 
                 console.log("MSB data", filteredRelationships, lhsNode, rhsNode)
