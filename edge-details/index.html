@@ -19,8 +19,8 @@
             "nodeLabel": "node_label",
             "nodeIcon": "node_type",
             "edgeCenterLabel": "link_type",
-            "edgeSourceLabel": "displayAttributes[0].value",
-            "edgeDestLabel": "displayAttributes[1].value"
+            "edgeSourceLabel": "source_interface_name",
+            "edgeDestLabel": "dest_interface_name"
         }
         
         // =============================================================================
@@ -297,11 +297,11 @@
                     link_type: "OSPF",
                     displayAttributes: [
                         {
-                            "attribute": "source_interface_name",
+                            "key": "source_interface_name",
                             "value": "ethernet_port"
                         },
                         {
-                            "attribute": "dest_interface_name",
+                            "key": "dest_interface_name",
                             "value": "ethernet_port"
                         }
                     ],
@@ -315,11 +315,11 @@
                     link_type: "CDP",
                     displayAttributes: [
                         {
-                            "attribute": "source_interface_name",
-                            "value": "ethernet_port"
+                            "key": "source_interface_name",
+                            "value": "serial_port"
                         },
                         {
-                            "attribute": "dest_interface_name",
+                            "key": "dest_interface_name",
                             "value": "ethernet_port"
                         }
                     ],
@@ -333,11 +333,11 @@
                     link_type: "BGP",
                     displayAttributes: [
                         {
-                            "attribute": "source_interface_name",
+                            "key": "source_interface_name",
                             "value": "serial_port"
                         },
                         {
-                            "attribute": "dest_interface_name",
+                            "key": "dest_interface_name",
                             "value": "serial_port"
                         }
                     ],
@@ -352,11 +352,11 @@
                     link_type: "LLDP",
                     displayAttributes: [
                         {
-                            "attribute": "source_interface_name",
+                            "key": "source_interface_name",
                             "value": "ethernet_port"
                         },
                         {
-                            "attribute": "dest_interface_name",
+                            "key": "dest_interface_name",
                             "value": "ethernet_port"
                         }
                     ],
@@ -449,9 +449,9 @@
             existingNodes.forEach(node => node.remove());
             
             // Find LHS and RHS nodes by their IDs
-            const lhsNode = components.find(component => component.id === LHSNodeId);
-            const rhsNode = components.find(component => component.id === RHSNodeId);
-            
+            const lhsNode = components.find(component => component.node_id === LHSNodeId);
+            const rhsNode = components.find(component => component.node_id === RHSNodeId);
+
             if (!lhsNode || !rhsNode) {
                 console.error('LHS or RHS node not found in components');
                 return;
@@ -497,10 +497,15 @@
                 <div class="node-label">${rightNodeLabel}</div>
             `;
             container.appendChild(rightNodeDiv);
+
+            return  {
+                lhsNode,
+                rhsNode
+            }
         }
 
         /**
-         * Get attribute value from relationship object
+         * Get key value from relationship object
          * First tries _.get() with the key, then searches displayAttributes array
          * Always returns a string (empty string if not found)
          * @param {Object} relationship - The relationship object
@@ -518,7 +523,7 @@
             
             // If not found, search in displayAttributes array
             if (relationship.displayAttributes && Array.isArray(relationship.displayAttributes)) {
-                const displayAttr = relationship.displayAttributes.find(attr => attr.name === attribute_map_key);
+                const displayAttr = relationship.displayAttributes.find(attr => attr.key === attribute_map_key);
                 if (displayAttr && displayAttr.value !== undefined && displayAttr.value !== null && displayAttr.value !== '') {
                     return String(displayAttr.value);
                 }
@@ -631,10 +636,10 @@
                     return matchesParentDirection || matchesOppositeDirection;
                 })
 
-                createNodes(components);
+                const { lhsNode, rhsNode } = createNodes(components);
                 createEdges(filteredRelationships);
 
-                console.log("MSB data", filteredRelationships, LHSNodeId, RHSNodeId)
+                console.log("MSB data", filteredRelationships, lhsNode, rhsNode)
             } catch (error) {
                 console.error("Fetch error:", error);
             }
