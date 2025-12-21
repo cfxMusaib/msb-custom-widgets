@@ -11,14 +11,14 @@
         // =============================================================================
         
         // Set to false when using real API data, true for testing with sample data
-        const TEST_MODE = true;
+        const TEST_MODE = false;
         
         // Map relationship properties to edge labels
         // Use lodash path syntax for nested properties: "displayAttributes[0].value"
         const attributeMap = {
             "nodeLabel": "node_label",
             "nodeIcon": "node_type",
-            "edgeMiddleLabel": "link_type",
+            "edgeCenterLabel": "link_type",
             "edgeLeftLabel": "displayAttributes[0].value",
             "edgeRightLabel": "displayAttributes[1].value"
         }
@@ -108,6 +108,8 @@
             text-align: center;
 
             width: 150px;
+            height: 40px;
+            word-break: break-word;
         }
 
         .edges-container {
@@ -245,12 +247,12 @@
             white-space: nowrap;
         }
 
-        .interface-label.source {
+        .interface-label.left {
             left: 10px;
             top: -4px;
         }
 
-        .interface-label.dest {
+        .interface-label.right {
             right: 20px;
             top: -4px;
         }
@@ -280,7 +282,6 @@
     </script>
 
     <script>
-
         // Sample data based on your structure
         const data = {
             components: [
@@ -340,7 +341,8 @@
                             "value": "serial_port"
                         }
                     ],
-                    dotted: false
+                    dotted: false,
+                    is_directionless: true
                 },
                 { 
                     id: '4', 
@@ -369,7 +371,7 @@
             if (!el) return null;
             try { return JSON.parse(el.textContent || "null"); } catch { return null; }
         })();
-        let left_id, right_id;
+        let LHSNodeId, RHSNodeId;
         
         // Get icon map from parent window
         const iconMap = window.parent?.cfxIconMap || {};
@@ -380,19 +382,19 @@
             if(!context){
                 throw new Error("No context found");
             }
-            left_id = context?.displayAttributes?.find(attr => attr.key === "left_id")?.value;
-            right_id = context?.displayAttributes?.find(attr => attr.key === "right_id")?.value;
+            LHSNodeId = context?.displayAttributes?.find(attr => attr.key === "left_id")?.value;
+            RHSNodeId = context?.displayAttributes?.find(attr => attr.key === "right_id")?.value;
 
-            if(!left_id || !right_id){
+            if(!LHSNodeId || !RHSNodeId){
                 throw new Error("No left or right id found");
             }
             api_endpoint.serviceRequestDescriptor.params.params[0].context = context;
             api_endpoint.serviceRequestDescriptor.params.params[0].context.node_list = [
                 {
-                    "node_id": left_id
+                    "node_id": LHSNodeId
                 },
                 {
-                    "node_id": right_id
+                    "node_id": RHSNodeId
                 }
             ]
             api_endpoint.serviceRequestDescriptor.params.params[0].stack_type = "dynamic";
@@ -446,21 +448,21 @@
             const existingNodes = container.querySelectorAll('.node');
             existingNodes.forEach(node => node.remove());
             
-            // Get first 2 components
-            const leftNode = components[0];
-            const rightNode = components[1];
+            // Find LHS and RHS nodes by their IDs
+            const lhsNode = components.find(component => component.id === LHSNodeId);
+            const rhsNode = components.find(component => component.id === RHSNodeId);
             
-            if (!leftNode || !rightNode) {
-                console.error('Need at least 2 components to create nodes');
+            if (!lhsNode || !rhsNode) {
+                console.error('LHS or RHS node not found in components');
                 return;
             }
             
-            // Create left node
+            // Create left node (LHS)
             const leftNodeDiv = document.createElement('div');
             leftNodeDiv.className = 'node';
             leftNodeDiv.id = 'node-a';
-            const leftNodeLabel = _.get(leftNode, attributeMap.nodeLabel) || 'Node A';
-            const leftNodeIcon = _.get(leftNode, attributeMap.nodeIcon, '');
+            const leftNodeLabel = _.get(lhsNode, attributeMap.nodeLabel) || 'Node A';
+            const leftNodeIcon = _.get(lhsNode, attributeMap.nodeIcon, '');
 
             let leftNodeIconSrc;
             if(leftNodeIcon?.startsWith('http')){
@@ -476,12 +478,12 @@
             `;
             container.insertBefore(leftNodeDiv, container.querySelector('.edges-container'));
             
-            // Create right node
+            // Create right node (RHS)
             const rightNodeDiv = document.createElement('div');
             rightNodeDiv.className = 'node';
             rightNodeDiv.id = 'node-b';
-            const rightNodeLabel = _.get(rightNode, attributeMap.nodeLabel) || 'Node B';
-            const rightNodeIcon = _.get(rightNode, attributeMap.nodeIcon, '');
+            const rightNodeLabel = _.get(rhsNode, attributeMap.nodeLabel) || 'Node B';
+            const rightNodeIcon = _.get(rhsNode, attributeMap.nodeIcon, '');
             let rightNodeIconSrc;
             if(rightNodeIcon?.startsWith('http')){
                 rightNodeIconSrc = rightNodeIcon;
@@ -513,41 +515,48 @@
                 const edgeLine = document.createElement('div');
                 edgeLine.className = 'edge-line';
 
-                // Create arrow - determine direction based on right_id
+                // Create arrow - determine direction based on relationship's left_id and right_id
+                // Compare relationship direction with LHSNodeId (left side) and RHSNodeId (right side)
+                // Arrow points right if relationship goes from LHS to RHS
+                // Arrow points left if relationship goes from RHS to LHS
                 const arrow = document.createElement('div');
-                const isRightToLeft = relationship.right_id === 'left-node';
+                // relationship.left_id = source, relationship.right_id = destination
+                // If source is RHS and destination is LHS, arrow points left
+                const isRightToLeft = relationship.left_id === RHSNodeId && relationship.right_id === LHSNodeId;
                 arrow.className = `arrow ${isRightToLeft ? 'left' : 'right'}`;
 
                 // Create edge label
                 const edgeLabel = document.createElement('div');
                 edgeLabel.className = 'edge-label';
-                edgeLabel.textContent = _.get(relationship, attributeMap.edgeMiddleLabel) || '';
+                edgeLabel.textContent = _.get(relationship, attributeMap.edgeCenterLabel) || '';
 
                 // Create source interface label
-                let sourceInterfaceLabel;
+                let edgeLeftLabel;
                 const leftLabelValue = _.get(relationship, attributeMap.edgeLeftLabel);
                 if(leftLabelValue){
-                    sourceInterfaceLabel = document.createElement('p');
-                    sourceInterfaceLabel.title = leftLabelValue;
-                    sourceInterfaceLabel.className = 'interface-label source';
-                    sourceInterfaceLabel.textContent = leftLabelValue;
+                    edgeLeftLabel = document.createElement('p');
+                    edgeLeftLabel.title = leftLabelValue;
+                    edgeLeftLabel.className = 'interface-label left';
+                    edgeLeftLabel.textContent = leftLabelValue;
                 }
 
                 // Create destination interface label
                 let destInterfaceLabel;
-                const rightLabelValue = _.get(relationship, attributeMap.edgeRightLabel);
-                if(rightLabelValue){
+                const edgeRightLabel = _.get(relationship, attributeMap.edgeRightLabel);
+                if(edgeRightLabel){
                     destInterfaceLabel = document.createElement('p');
-                    destInterfaceLabel.title = rightLabelValue;
-                    destInterfaceLabel.className = 'interface-label dest';
-                    destInterfaceLabel.textContent = rightLabelValue;
+                    destInterfaceLabel.title = edgeRightLabel;
+                    destInterfaceLabel.className = 'interface-label right';
+                    destInterfaceLabel.textContent = edgeRightLabel;
                 }
                 // Assemble edge
-                edgeLine.appendChild(arrow);
+                if(!relationship.is_directionless){
+                    edgeLine.appendChild(arrow);
+                }
                 edgeDiv.appendChild(edgeLine);
                 edgeDiv.appendChild(edgeLabel);
-                if(sourceInterfaceLabel){
-                    edgeDiv.appendChild(sourceInterfaceLabel);
+                if(edgeLeftLabel){
+                    edgeDiv.appendChild(edgeLeftLabel);
                 }
                 if(destInterfaceLabel){
                     edgeDiv.appendChild(destInterfaceLabel);
@@ -560,6 +569,8 @@
         // Initialize the graph
         async function init() {
             if(TEST_MODE){
+                LHSNodeId = data.components[0].node_id;
+                RHSNodeId = data.components[1].node_id;
                 createNodes(data.components);
                 createEdges(data.relationships);
                 return;
@@ -574,19 +585,22 @@
                     return;
                 }
 
-                const leftNode = components.find(component => component.id === left_id);
-                const rightNode = components.find(component => component.id === right_id);
-
                 // filter out edges/relationships
+                // Child relationships may have different direction than parent relationship
+                // So we need to check both directions: LHS->RHS and RHS->LHS
+                // relationship.left_id = source node id, relationship.right_id = destination node id
                 const filteredRelationships = relationships.filter(relationship => {
-                    return (relationship.left_id === left_id &&
-                    relationship.right_id === right_id)
+                    // Check if relationship matches parent direction (LHSNodeId -> RHSNodeId)
+                    const matchesParentDirection = relationship.left_id === LHSNodeId && relationship.right_id === RHSNodeId;
+                    // Check if relationship is in opposite direction (RHSNodeId -> LHSNodeId)
+                    const matchesOppositeDirection = relationship.left_id === RHSNodeId && relationship.right_id === LHSNodeId;
+                    return matchesParentDirection || matchesOppositeDirection;
                 })
 
                 createNodes(components);
                 createEdges(filteredRelationships);
 
-                console.log("MSB data", filteredRelationships, leftNode, rightNode)
+                console.log("MSB data", filteredRelationships, LHSNodeId, RHSNodeId)
             } catch (error) {
                 console.error("Fetch error:", error);
             }
