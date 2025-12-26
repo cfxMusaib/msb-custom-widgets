@@ -21,7 +21,9 @@
             "edgeCenterLabel": "link_type",
             "edgeSourceLabel": "source_interface_name",
             "edgeDestLabel": "dest_interface_name",
-            "edgeColor": "edge_color"
+            "edgeColor": "edge_color",
+            "edgeSourceLabelColor": "source_label_outline_color",
+            "edgeDestLabelColor": "dest_label_outline_color"
         }
         
         // =============================================================================
@@ -199,12 +201,12 @@
 
         .interface-label {
             position: absolute;
-            background-color: #e3f2fd;
             padding: 2px 6px;
-            border: 1px solid #1976d2;
             border-radius: 4px;
             font-size: 10px;
             color: #1976d2;
+            border: 1px solid currentColor;
+            background-color: color-mix(in srgb, currentColor 10%, transparent);
             white-space: nowrap;
             font-weight: 500;
 
@@ -263,7 +265,9 @@
                     right_id: 'right-node', 
                     relation_type: 'Edge Label 1', 
                     link_type: "OSPF",
-                    edge_color: "#FF5733",
+                    // edge_color: "#FF5733",
+                    source_label_outline_color: "#FF5733",
+                    dest_label_outline_color: "#C70039",
                     displayAttributes: [
                         {
                             "key": "source_interface_name",
@@ -283,6 +287,8 @@
                     relation_type: 'Edge Label 2',
                     link_type: "CDP",
                     edge_color: "#33C1FF",
+                    source_label_outline_color: "#0066CC",
+                    dest_label_outline_color: "#33C1FF",
                     displayAttributes: [
                         {
                             "key": "source_interface_name",
@@ -302,6 +308,8 @@
                     relation_type: 'Edge Label 3', 
                     link_type: "BGP",
                     edge_color: "#28A745",
+                    source_label_outline_color: "#28A745",
+                    dest_label_outline_color: "#155724",
                     displayAttributes: [
                         {
                             "key": "source_interface_name",
@@ -560,6 +568,10 @@
                 // Get source and destination interface values
                 const sourceInterfaceValue = getAttributeMapValue(relationship, attributeMap.edgeSourceLabel);
                 const destInterfaceValue = getAttributeMapValue(relationship, attributeMap.edgeDestLabel);
+                
+                // Get outline colors for labels, default to #1976d2
+                const sourceLabelColor = getAttributeMapValue(relationship, attributeMap.edgeSourceLabelColor) || '#1976d2';
+                const destLabelColor = getAttributeMapValue(relationship, attributeMap.edgeDestLabelColor) || '#1976d2';
 
                 // Create source interface label - position based on direction
                 // If arrow goes right (LHS -> RHS), source is on left
@@ -570,6 +582,7 @@
                     sourceInterfaceLabel.title = sourceInterfaceValue;
                     sourceInterfaceLabel.className = `interface-label ${isRightToLeft ? 'right' : 'left'}`;
                     sourceInterfaceLabel.textContent = sourceInterfaceValue;
+                    sourceInterfaceLabel.style.color = sourceLabelColor;
                 }
 
                 // Create destination interface label - position based on direction
@@ -581,6 +594,7 @@
                     destInterfaceLabel.title = destInterfaceValue;
                     destInterfaceLabel.className = `interface-label ${isRightToLeft ? 'left' : 'right'}`;
                     destInterfaceLabel.textContent = destInterfaceValue;
+                    destInterfaceLabel.style.color = destLabelColor;
                 }
                 // Assemble edge
                 if(!relationship.is_directionless){
